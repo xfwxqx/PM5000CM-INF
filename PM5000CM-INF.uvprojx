@@ -611,19 +611,9 @@
               <FilePath>.\User\UserCommon.c</FilePath>
             </File>
             <File>
-              <FileName>Ydt1363.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\User\Ydt1363.c</FilePath>
-            </File>
-            <File>
               <FileName>SoftTimer.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User\SoftTimer.c</FilePath>
-            </File>
-            <File>
-              <FileName>InfraRecord.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\User\InfraRecord.c</FilePath>
             </File>
           </Files>
         </Group>

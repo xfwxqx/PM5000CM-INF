@@ -239,20 +239,7 @@ extern uint32_t ACCurrentOffsetCalibration_ALL(PRN8209C pRn8209c);
 #define		LED_LEARNING				3
 extern void Comm_CtrlLightOnOff(uint8_t LightNum,uint8_t IsOn);
 
-//从Falsh中获取指定厂家的指定的命令号对应红外波形，保存到pCmd指定的地址;若IsReadBackup为假，则不获取
-//返回0代表成功 1代表参数无效 2代表读取FLASH失败 3代表数据校验失败
-extern uint32_t GetInfraLearningCmdFromFlash(const uint32_t ManuID,const uint32_t CmdID,SaveRecordFormatDef *pCmd,const uint32_t ReadBytes);
 
-//保存指定厂家的指定的命令号对应红外波形到Falsh中
-//返回0代表成功 1代表参数无效 2代表写入FLASH失败 3代表写入备份数据失败 4代表写入数据和备份数据都失败
-extern uint32_t SaveInfraLearningCmdToFlash(const uint32_t ManuID,const uint32_t CmdID,SaveRecordFormatDef *pSaveCmd,const uint32_t SaveBytes);
-
-#define IRTX P26
-#define IRTX_LOW 0
-#define IRTX_HIGH 1
-extern uint32_t SendInfraCmd(SaveRecordFormatDef *pCmd);
-
-extern uint32_t CleanInfraCmd(void);
 
 
 #endif

@@ -34,13 +34,20 @@
 #define		PM5KT_COMMON_TIMEZONE_BEIJING											8
 #define		PM5KT_COMMON_TIMEZONE_LOCAL												PM5KT_COMMON_TIMEZONE_BEIJING
 
-#define		PM5KT_HARDWARE_VERSION														0x10				
-#define		PM5KT_SOFTWARE_VERSION														0x170713
+#define		PM5KT_HARDWARE_VERSION														0x14				
+#define		PM5KT_SOFTWARE_VERSION														0x171017
 
 #define		PM5KT_LOCALRESPONSE_EXTCMD_GET_VER								0xA1
-#define		PM5KT_LOCALRESPONSE_EXTCMD_GET_DATA								0xA2
+#define		PM5KT_LOCALRESPONSE_EXTCMD_GET_RUN_TIME							0xA2
 #define		PM5KT_LOCALRESPONSE_EXTCMD_SET_RTC								0xA3
 #define		PM5KT_LOCALRESPONSE_EXTCMD_GET_RTC								0xA4
+#define		PM5KT_LOCALRESPONSE_EXTCMD_GET_AI_CALI			0x52	
+#define		PM5KT_LOCALRESPONSE_EXTCMD_SET_AI_CALI			0x53
+#define		PM5KT_LOCALRESPONSE_EXTCMD_GET_REAL_DATA		0x02
+
+
+
+
 
 #define		AIR_COND_MENU_TYPE_LEARN													0x1
 #define		AIR_COND_MENU_TYPE_CTRL														0x2
@@ -65,10 +72,47 @@
 
 #define		SYS_RESET_WAIT_S_MAX	3
 
+#define		SYS_AI_CHANNEL_COUNT	8
+#define		SYS_DI_CHANNEL_COUNT	8
 
+//AI校准变换系数
+typedef struct {
+	struct{
+		float k;
+		float b;
+	}Channel;
+}sAI_CALI_COEFFICIENT;
+
+typedef struct{
+		uint32_t B24V1;
+		uint32_t B48V1;
+		uint32_t B24V2;
+		uint32_t B48V2;
+}sREAL_DATA_Battery;
+
+typedef struct{
+		uint32_t OriValue[SYS_AI_CHANNEL_COUNT];
+}sREAL_DATA_AI;
+
+typedef struct{
+		uint32_t OriValue[SYS_DI_CHANNEL_COUNT];
+}sREAL_DATA_DI;
+
+//实时数据
+typedef struct {
+	sREAL_DATA_Battery Battery;
+	sREAL_DATA_AI AIE1;
+	sREAL_DATA_AI AIE2;
+	sREAL_DATA_DI DIE1;
+	sREAL_DATA_DI DIE2;
+}sREAL_DATA;
 
 typedef struct _PM5KT_MAIN_LOCAL_MANAGER
 {		
+		sAI_CALI_COEFFICIENT AiCaliCoeffiE1;
+		sAI_CALI_COEFFICIENT AiCaliCoeffiE2;
+		sREAL_DATA RealData;
+
 		uint32_t			TimSysTimeCountS;	
 		uint32_t 			DownCom1RecvTimeOut;
 		uint32_t 			DownCom2RecvTimeOut;
@@ -91,7 +135,6 @@ typedef struct _PM5KT_MAIN_LOCAL_MANAGER
 		uint8_t				IsSysRunLight:1;
 		uint8_t				IsSysWathdogSet:1;
 		uint8_t				IsSysNeedReset:1;
-		
 }PM5KT_MAIN_LOCAL_MANAGER, *PPM5KT_MAIN_LOCAL_MANAGER;
 
 static PM5KT_MAIN_LOCAL_MANAGER		Pm5ktLocalManager;
@@ -631,7 +674,7 @@ static void LocalResProcess(uint16_t OpCmd, uint8_t *pCmdBuf, uint8_t CmdLen)
 				ResBuf[9]		= 0xAA;
 				ResLen			= 10;
 				break;
-			case PM5KT_LOCALRESPONSE_EXTCMD_GET_DATA:
+			case PM5KT_LOCALRESPONSE_EXTCMD_GET_RUN_TIME:
 				ResLen						= 3;
 				ResBuf[ResLen++]	= OpCmd;
 				memcpy(&ResBuf[ResLen],&Pm5ktLocalManager.TimSysTimeCountS, sizeof(Pm5ktLocalManager.TimSysTimeCountS));
@@ -687,7 +730,7 @@ static void LocalResProcess(uint16_t OpCmd, uint8_t *pCmdBuf, uint8_t CmdLen)
 		}
 }
 
-//7E 31 30 30 31 36 36 34 46 30 30 30 30 46 44 39 38 0D
+/*//7E 31 30 30 31 36 36 34 46 30 30 30 30 46 44 39 38 0D
 static void LocalResProcessEx(PPROTOCAL_YDT1363_3 pProcBuf)		
 {
 		uint8_t						ResBuf[256];
@@ -713,6 +756,7 @@ static void LocalResProcessEx(PPROTOCAL_YDT1363_3 pProcBuf)
 						
 		}
 }
+
 static void ProtBufProcessEx(void)
 {
 		uint16_t						i, Len;
@@ -764,24 +808,31 @@ static void ProtBufProcessEx(void)
 				memset(gUart_Pm5ktApi.ProtBuffer,0,sizeof(gUart_Pm5ktApi.ProtBuffer));
 		}    
 }
-static void ProtBufProcess(void)
+*/
+static void ProtBufProcess()
 {
 		uint16_t		i, Len;
 		uint8_t			IsCutted=0, IsLong55AA=0, RetVal=0;
-		
-		for (i=0; i<gUart_Pm5ktApi.ProtDataLen; )	
+		static uint8_t			ProtBuffer[PM5KT_PROTOCOL_BUFFER_SIZE];				
+		static uint16_t			ProtDataLen;
+
+		for (i=0; i< gUart_Pm5ktApi.ProtDataLen; )	
 		{
 				Len		= gUart_Pm5ktApi.ProtDataLen-i;
 				if (Comm_ProtocolAnalyse55AA(&gUart_Pm5ktApi.ProtBuffer[i], &Len, &IsCutted, &IsLong55AA, PM5KT_UPCOM_MTU_SIZE))
 				{
 						if (IsCutted)
 						{
+								//debug("IsCutted\n");
+								
 								memcpy(gUart_Pm5ktApi.ProtBuffer, &gUart_Pm5ktApi.ProtBuffer[i], gUart_Pm5ktApi.ProtDataLen-i);
 								gUart_Pm5ktApi.ProtDataLen	-= i;
+								
 								break;
 						}
 						else
 						{
+								
 								if (IsLong55AA)
 								{
 										if (gUart_Pm5ktApi.ProtBuffer[i+1]==PM5KT_COM_PROTOCOL_ADDR_COM1)
@@ -822,6 +873,8 @@ static void ProtBufProcess(void)
 															gUart_Pm5ktApi.DownComSendBuffer, &gUart_Pm5ktApi.DownComSendBufferPushOffset, gUart_Pm5ktApi.DownComSendBufferPopOffset, PM5KT_DOWNCOM_SEND_BUFFER_SIZE);
 												if(RetVal)
 														Pm5ktLocalManager.DownCom4NeedSend 	= 1;
+										}else{
+												//debug("IsLong55AA:%d.Addr do not support\n",IsLong55AA);
 										}
 								
 								}
@@ -830,11 +883,13 @@ static void ProtBufProcess(void)
 										if (gUart_Pm5ktApi.ProtBuffer[i+1]==PM5KT_COM_PROTOCOL_ADDR_LOCAL)
 										{
 												LocalResProcess(gUart_Pm5ktApi.ProtBuffer[i+3], &gUart_Pm5ktApi.ProtBuffer[i+3], gUart_Pm5ktApi.ProtBuffer[i+2]);
+										}else{
+												//debug("IsLong55AA:%d.Addr do not support\n",IsLong55AA);
 										}
 									
 								}
 
-								i		+= Len;
+								i += Len;
 						}
 				}
 				else
