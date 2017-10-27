@@ -4,12 +4,7 @@
 
 //#include "UserCommon.h"
 #include "NUC029xAN.h"
-
-#define AT45DBxxxD_PIN_MOSI 				P15
-#define AT45DBxxxD_PIN_MISO 				P16
-#define AT45DBxxxD_PIN_SCK 					P17
-#define AT45DBxxxD_PIN_CS 					P14
-#define AT45DBxxxD_PIN_RST 					P42
+#include "GpioDefine.h"
 
 //*****************************************************************************
 //

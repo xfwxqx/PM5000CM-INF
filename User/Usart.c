@@ -81,7 +81,7 @@ void PM5KT_UPCOM_IRQHandler(void)   //串口0中断服务程序
 			gUart_Pm5ktApi.IsUpComRecv	= 1;
 	}		
 }
-
+/*
 void PM5KT_DOWNCOM_IRQHandler(void)   //串口1中断服务程序
 {
 
@@ -92,7 +92,7 @@ void PM5KT_DOWNCOM_IRQHandler(void)   //串口1中断服务程序
 	{
 			while(UART_IS_RX_READY(PM5KT_DOWNCOM))
 			{
-					/* Get the character from UART Buffer */
+
 					RecvData = UART_READ(PM5KT_DOWNCOM);
 					WatchDogFeed();
 					if (Uart_ComRecvToCycBuffer(RecvData, gUart_Pm5ktApi.DownComRecvBuffer, &gUart_Pm5ktApi.DownComRecvBufferPushOffset, gUart_Pm5ktApi.DownComRecvBufferPopOffset, PM5KT_DOWNCOM_RECV_BUFFER_SIZE))
@@ -107,12 +107,12 @@ void PM5KT_DOWNCOM_IRQHandler(void)   //串口1中断服务程序
 	}
 
 		
-} 
+} */
 //cs=4 红外
 
 extern void UART_CS(uint8_t cs)
 {
-		switch(cs)
+		/*switch(cs)
 		{
 			case 1:
 			{
@@ -173,7 +173,7 @@ extern void UART_CS(uint8_t cs)
 				
 			}
 			break;
-		}
+		}*/
 }
 
 extern uint32_t UPCOM_Write(uint8_t *pu8TxBuf, uint32_t u32WriteBytes)

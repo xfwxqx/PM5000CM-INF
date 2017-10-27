@@ -66,21 +66,12 @@ extern uint8_t AT45DBXXX_Init(void)
 {
 		uint16_t temp=0;
     
-    CLK_EnableModuleClock(SPI0_MODULE);
-    //SPI初始化和CS5460保持一致
-		/* Select IP clock source */
-    CLK_SetModuleClock(SPI0_MODULE,CLK_CLKSEL1_SPI0_S_HCLK,0);
-    /* Setup SPI multi-function pin */
-    
-    SYS->P1_MFP &= ~(SYS_MFP_P15_Msk | SYS_MFP_P16_Msk | SYS_MFP_P17_Msk);
-    SYS->P1_MFP |= (SYS_MFP_P15_MOSI_0 | SYS_MFP_P16_MISO_0 | SYS_MFP_P17_SPICLK0);
-    
-    SPI_Open(SPI0, SPI_MASTER, SPI_MODE_0, 8, 2000000);
+    SPI_Open(SPI1, SPI_MASTER, SPI_MODE_0, 8, 2000000);
 
-    SPI_DisableAutoSS(SPI0);
+    SPI_DisableAutoSS(SPI1);
     
-    GPIO_SetMode(P1, BIT4, GPIO_PMD_OUTPUT);//DF_CS
-    GPIO_SetMode(P4, BIT2, GPIO_PMD_OUTPUT);//DF_RST
+    GPIO_SetMode(AT45DBxxxD_PIN_CS_PORT, AT45DBxxxD_PIN_CS_PIN_MASK, GPIO_PMD_OUTPUT);//DF_CS
+    GPIO_SetMode(AT45DBxxxD_PIN_RST_PORT, AT45DBxxxD_PIN_RST_PIN_MASK, GPIO_PMD_OUTPUT);//DF_RST
     
     AT45DBxxxD_PIN_CS 	= 1;
     AT45DBxxxD_PIN_RST 	= 1;

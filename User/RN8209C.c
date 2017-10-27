@@ -9,24 +9,7 @@
 /**************************************
 	全局变量声明
 ****************************************/
-RN8209C_INIT_PARAM	sInitParam;
 
-#define EN1 				P03
-#define EN2 				P41
-#define EN3 				P04
-#define EN4 				P05
-
-
-/*****************************************************************************
-** Function name:RN8209C_ReadReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
-**
-** Description:读RN8209寄存器
-**
-** Parameters:RegAddr 寄存器地址，*pBuf读出值的存放地址，Len：待读值的长度   
-**
-** Returned value:	操作标识-0成功,1-输入参数错误 2-读取失败
-**
-******************************************************************************/
 //累积和不能超过uint32_t的最大值
 static uint64_t GetSum_u32(uint32_t *s,uint8_t Cnt)
 {
@@ -40,16 +23,26 @@ static uint64_t GetSum_u32(uint32_t *s,uint8_t Cnt)
 		
     return Sum;
 }
+/*****************************************************************************
+** Function name:RN8209C_ReadReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
+**
+** Description:读RN8209寄存器
+**
+** Parameters:RegAddr 寄存器地址，*pBuf读出值的存放地址，Len：待读值的长度   
+**
+** Returned value:	操作标识-0成功,-1 -读取失败 -2 -输入参数错误 
+**
+******************************************************************************/
 
-extern uint32_t RN8209C_ReadReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
+extern FUNC_RET_DEFINE RN8209C_ReadReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
 {
 		uint8_t i,j,CheckSum=0,Timeout;
 		uint8_t ReadBuf[5]={0};
 		
 		if(pBuf==NULL)
-				return FUNC_RET_PARAM_ERR;
+				return FUNC_RET_PARAM_INVALID;
 		if((Len==0)||(Len>4))
-				return FUNC_RET_PARAM_ERR;
+				return FUNC_RET_PARAM_INVALID;
 
 		Timeout 	= 0;
 		CheckSum 	= RegAddr;
@@ -60,7 +53,7 @@ extern uint32_t RN8209C_ReadReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
 				DOWNCOM_Write(&RegAddr,1);
 				WatchDogFeed();
 				if(FALSE == UART_Read(PM5KT_DOWNCOM,ReadBuf,Len+1))
-						return FUNC_RET_FAIL;
+						return FUNC_RET_FAILURE;
 				WatchDogFeed();
 				for(i=0;i<Len;i++)
 						CheckSum += ReadBuf[i];
@@ -76,7 +69,7 @@ extern uint32_t RN8209C_ReadReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
 		}
 		while(Timeout<3);
 		
-		return FUNC_RET_FAIL;
+		return FUNC_RET_FAILURE;
 }
 
 /*****************************************************************************
@@ -86,19 +79,19 @@ extern uint32_t RN8209C_ReadReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
 **
 ** Parameters:RegAddr 寄存器地址，*pBuf读出值的存放地址，Len：待读值的长度   
 **
-** Returned value:	操作标识-0写入成功,1-输入参数错误 2-写入失败
+** Returned value:	操作标识-0成功,-1 -读取失败 -2 -输入参数错误 
 **
 ******************************************************************************/
-extern uint32_t RN8209C_WiteReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
+extern FUNC_RET_DEFINE RN8209C_WiteReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
 {
 		uint8_t 	i,CheckSum=0;
     uint8_t 	WriteBuf[5]	={0};
     uint8_t 	ReadBuf[5]	={0};
 	
 		if(pBuf==NULL)
-				return FUNC_RET_PARAM_ERR;
+				return FUNC_RET_PARAM_INVALID;
 		if((Len==0)||(Len>2))
-				return FUNC_RET_PARAM_ERR;
+				return FUNC_RET_PARAM_INVALID;
 
 		CheckSum = 0;
 		
@@ -128,51 +121,51 @@ extern uint32_t RN8209C_WiteReg(uint8_t RegAddr,uint8_t *pBuf,uint8_t Len)
 				i++;
 		}while(i<3);
 		
-		return FUNC_RET_FAIL;
+		return FUNC_RET_FAILURE;
 }
-extern uint32_t RN8209C_SoftReset(void) 
+extern FUNC_RET_DEFINE RN8209C_SoftReset(void) 
 {
     uint8_t Buf[1]= {0xfa};
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_WiteReg(0xea,Buf,1))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
 		WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_ReadReg(RN8209C_REG_SysStatus,Buf,RN8209C_REG_SysStatus_LEN))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
     WatchDogFeed();
 		
-    return ((Buf[0]&(1<<1))?FUNC_RET_SUCC:FUNC_RET_FAIL);
+    return ((Buf[0]&(1<<1))?FUNC_RET_SUCC:FUNC_RET_FAILURE);
 }
-extern uint32_t RN8209C_WriteEnable(void) 
+extern FUNC_RET_DEFINE RN8209C_WriteEnable(void) 
 {
     uint8_t Buf[1]= {0xe5};
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_WiteReg(0xea,Buf,1))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_ReadReg(RN8209C_REG_SysStatus,Buf,RN8209C_REG_SysStatus_LEN))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		WatchDogFeed();
 		
-    return ((Buf[0]&(1<<4))?FUNC_RET_SUCC:FUNC_RET_FAIL);
+    return ((Buf[0]&(1<<4))?FUNC_RET_SUCC:FUNC_RET_FAILURE);
 }
-extern uint32_t RN8209C_WriteProtect(void) 
+extern FUNC_RET_DEFINE RN8209C_WriteProtect(void) 
 {
     uint8_t Buf[1]={0xdc};
 
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_WiteReg(0xea,Buf,1))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_ReadReg(RN8209C_REG_SysStatus,Buf,RN8209C_REG_SysStatus_LEN))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		WatchDogFeed();
 		
-    return ((Buf[0]&(1<<4))?FUNC_RET_FAIL:FUNC_RET_SUCC);
+    return ((Buf[0]&(1<<4))?FUNC_RET_FAILURE:FUNC_RET_SUCC);
 }
 extern void RN8209C_WaitDataUpdate(void) 
 {
@@ -208,10 +201,10 @@ extern uint16_t RN8209C_GetCheckSum(void)
     return GetWord(&Buf[0]);
 }
 
-extern uint32_t RN8209C_Init_ResetParam(PRN8209C_INIT_PARAM pInitParam)
+extern FUNC_RET_DEFINE RN8209C_Init_ResetParam(PRN8209C_INIT_PARAM pInitParam)
 {
     if(pInitParam==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
     
     memset((void *)pInitParam,0,sizeof(RN8209C_INIT_PARAM));
     //pInitParam->UNION.PARAM_List.SYSCON 	= 0x0040;
@@ -256,25 +249,25 @@ extern uint32_t RN8209C_Init_ResetParam(PRN8209C_INIT_PARAM pInitParam)
     return FUNC_RET_SUCC;
 }
 
-static uint32_t RN8209C_Init_Chip(PRN8209C_DEF pRnDef)
+static FUNC_RET_DEFINE RN8209C_Init_Chip(PRN8209C_DEF pRnDef)
 {
 		uint8_t			i;
 		uint16_t 		CheckSum=0;
     PRN8209C_INIT_PARAM pInitParam=NULL;
     
     if(pRnDef==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
     
 		WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_WriteEnable())
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
     WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_SoftReset())
         goto Err;
 
 		WatchDogFeed();
 		if(FUNC_RET_SUCC != RN8209C_WriteEnable())
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     pInitParam = &pRnDef->InitParam;
 		CheckSum=0;
@@ -311,36 +304,38 @@ static uint32_t RN8209C_Init_Chip(PRN8209C_DEF pRnDef)
 Err:RN8209C_WriteProtect(); 
 		WatchDogFeed();
 		
-    return FUNC_RET_FAIL;
+    return FUNC_RET_FAILURE;
 }
 
-extern uint32_t RN8209C_Init(PRN8209C pRn8209)
+extern FUNC_RET_DEFINE RN8209C_Init(PRN8209C pRn8209)
 {
     uint8_t i;
-    uint32_t Ret=0;
     
     if(pRn8209==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
     
     for(i=0;i<3;i++)
 		{
         UART_CS(i+1);
         DelayUs(10);
-				WatchDogFeed();
-        Ret += RN8209C_Init_Chip(&pRn8209->Def[i]);
+		WatchDogFeed();
+        if(FUNC_RET_SUCC != RN8209C_Init_Chip(&pRn8209->Def[i])){
+			UART_CS(0);
+			return FUNC_RET_FAILURE;
+		}
         UART_CS(0);
     }
 		
-    return Ret;
+    return FUNC_RET_SUCC;
 }
 
-extern uint32_t RN8209C_GetRegValue(uint8_t RegAddr,uint32_t *pVal)
+extern FUNC_RET_DEFINE RN8209C_GetRegValue(uint8_t RegAddr,uint32_t *pVal)
 {
     uint8_t RegAddrTemp=0,RegLen=0;
     uint32_t u32Temp=0;
     
     if(pVal==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
     
     switch(RegAddr)
     {
@@ -417,11 +412,11 @@ extern uint32_t RN8209C_GetRegValue(uint8_t RegAddr,uint32_t *pVal)
     }
 		WatchDogFeed();
 		
-    return FUNC_RET_FAIL;
+    return FUNC_RET_FAILURE;
 }
 
 //多次测量取Ia、Ib、U平均值
-extern uint32_t RN8209C_GetCurrVolAverage(uint32_t *pIa,uint32_t *pIb,uint32_t *pU)
+extern FUNC_RET_DEFINE RN8209C_GetCurrVolAverage(uint32_t *pIa,uint32_t *pIb,uint32_t *pU)
 {
     uint8_t 	Cnt;
     uint32_t 	IaTemp[11]={0};
@@ -436,13 +431,13 @@ extern uint32_t RN8209C_GetCurrVolAverage(uint32_t *pIa,uint32_t *pIb,uint32_t *
         RN8209C_WaitDataUpdate();
 				WatchDogFeed();
         if((pIa!=NULL)&&(FUNC_RET_SUCC != RN8209C_GetRegValue(RN8209C_REG_IARMS,&IaTemp[Cnt])))
-            return FUNC_RET_FAIL;
+            return FUNC_RET_FAILURE;
 				WatchDogFeed();
         if((pIb!=NULL)&&(FUNC_RET_SUCC != RN8209C_GetRegValue(RN8209C_REG_IBRMS,&IbTemp[Cnt])))
-            return FUNC_RET_FAIL;
+            return FUNC_RET_FAILURE;
 				WatchDogFeed();
         if((pU!=NULL)&&(FUNC_RET_SUCC != RN8209C_GetRegValue(RN8209C_REG_URMS,&UTemp[Cnt])))
-            return FUNC_RET_FAIL;
+            return FUNC_RET_FAILURE;
 				WatchDogFeed();
     }
     Sum = GetSum_u32(&IaTemp[1],10);
@@ -465,7 +460,7 @@ extern uint32_t RN8209C_GetCurrVolAverage(uint32_t *pIa,uint32_t *pIb,uint32_t *
     return FUNC_RET_SUCC;
 }
 //多次测量取Pa、Pb平均值
-static uint32_t RN8209C_GetPowerAverage(int32_t *pPa,int32_t *pPb)
+static FUNC_RET_DEFINE RN8209C_GetPowerAverage(int32_t *pPa,int32_t *pPb)
 {
     uint8_t Cnt;
     int32_t PaTemp[11]={0};
@@ -479,10 +474,10 @@ static uint32_t RN8209C_GetPowerAverage(int32_t *pPa,int32_t *pPb)
         RN8209C_WaitDataUpdate();
 				WatchDogFeed();
         if(FUNC_RET_SUCC != RN8209C_GetRegValue(RN8209C_REG_PowerPA,(uint32_t *)&PaTemp[Cnt]))
-            return FUNC_RET_FAIL;
+            return FUNC_RET_FAILURE;
 				WatchDogFeed();
         if(FUNC_RET_SUCC != RN8209C_GetRegValue(RN8209C_REG_PowerPB,(uint32_t *)&PbTemp[Cnt]))
-            return FUNC_RET_FAIL;
+            return FUNC_RET_FAILURE;
         WatchDogFeed();
     }
 		Sum = 0;
@@ -506,15 +501,30 @@ static uint32_t RN8209C_GetPowerAverage(int32_t *pPa,int32_t *pPb)
     return FUNC_RET_SUCC;
 }
 
-extern uint32_t GetSPLIB(uint32_t *pIb)
+extern FUNC_RET_DEFINE GetSPLIB(uint32_t *pIb)
 {
     RN8209C_WaitDataUpdate();
     if((pIb!=NULL)&&(FUNC_RET_SUCC != RN8209C_GetRegValue(RN8209C_REG_SPL_IB,pIb)))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
+    return FUNC_RET_SUCC;
+}
+extern FUNC_RET_DEFINE GetSPLIA(uint32_t *pIa)
+{
+    RN8209C_WaitDataUpdate();
+    if((pIa!=NULL)&&(FUNC_RET_SUCC != RN8209C_GetRegValue(RN8209C_REG_SPL_IA,pIa)))
+        return FUNC_RET_FAILURE;
+    return FUNC_RET_SUCC;
+}
+extern FUNC_RET_DEFINE GetSPLU(uint32_t *pU)
+{
+    RN8209C_WaitDataUpdate();
+    if((pU!=NULL)&&(FUNC_RET_SUCC != RN8209C_GetRegValue(RN8209C_REG_SPL_U,pU)))
+        return FUNC_RET_FAILURE;
     return FUNC_RET_SUCC;
 }
 
-extern uint32_t GetSPLIBAverage(uint32_t *pIb)
+
+extern FUNC_RET_DEFINE GetSPLIBAverage(uint32_t *pIb)
 {
 		uint8_t 	Cnt;
     uint32_t 	IaTemp[11]={0};
@@ -526,7 +536,7 @@ extern uint32_t GetSPLIBAverage(uint32_t *pIb)
         RN8209C_WaitDataUpdate();
 		WatchDogFeed();
         if((pIb!=NULL)&&(FUNC_RET_SUCC != RN8209C_GetRegValue(RN8209C_REG_SPL_IB,&IaTemp[Cnt])))
-            return FUNC_RET_FAIL;
+            return FUNC_RET_FAILURE;
 		WatchDogFeed();
     }
     Sum = 0;
@@ -542,14 +552,14 @@ extern uint32_t GetSPLIBAverage(uint32_t *pIb)
     return FUNC_RET_SUCC;
 }
 //频率计算公式：f=CLKIN/8/UFREQ,其中CLKIN=3.579545MHz
-extern uint32_t RN8209C_GetFreqHz(float *pHz)
+extern FUNC_RET_DEFINE RN8209C_GetFreqHz(float *pHz)
 {
     uint32_t 	u32Temp=0;
     float 		fTemp=0.0;
     
 		WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_UFreq,&u32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     //printf("IARMS:%u\n",u32Temp&0xffffff);
     u32Temp &= 0xffff;
@@ -563,17 +573,17 @@ extern uint32_t RN8209C_GetFreqHz(float *pHz)
     return FUNC_RET_SUCC;
 }
 
-extern uint32_t RN8209C_GetIa(PRN8209C_CALI_PARAM pCali,float *pI)
+extern FUNC_RET_DEFINE RN8209C_GetIa(PRN8209C_CALI_PARAM pCali,float *pI)
 {
     uint32_t 	u32Temp=0;
     float 		fTemp=0.0;
     
     if(pCali==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_IARMS,&u32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     //printf("IARMS:%u\n",u32Temp&0xffffff);
     u32Temp &= 0x7fffff;
@@ -588,17 +598,17 @@ extern uint32_t RN8209C_GetIa(PRN8209C_CALI_PARAM pCali,float *pI)
     return FUNC_RET_SUCC;
 }
 
-extern uint32_t RN8209C_GetIb(PRN8209C_CALI_PARAM pCali,float *pI)
+extern FUNC_RET_DEFINE RN8209C_GetIb(PRN8209C_CALI_PARAM pCali,float *pI)
 {
     uint32_t 	u32Temp=0;
     float 		fTemp=0.0;
     
     if(pCali==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_IBRMS,&u32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
     //printf("IARMS:%u\n",u32Temp&0xffffff);
 		
     u32Temp &= 0x7fffff;
@@ -614,18 +624,18 @@ extern uint32_t RN8209C_GetIb(PRN8209C_CALI_PARAM pCali,float *pI)
     return FUNC_RET_SUCC;
 }
 
-extern uint32_t RN8209C_GetU(PRN8209C_CALI_PARAM pCali,float *pU)
+extern FUNC_RET_DEFINE RN8209C_GetU(PRN8209C_CALI_PARAM pCali,float *pU)
 {
     uint32_t 	u32Temp=0;
     float 		fTemp=0.0;
     
     
     if(pCali==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_URMS,&u32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     u32Temp &= 0xffffff;
     fTemp 	= (float)u32Temp;
@@ -638,17 +648,17 @@ extern uint32_t RN8209C_GetU(PRN8209C_CALI_PARAM pCali,float *pU)
     
     return FUNC_RET_SUCC;
 }
-extern uint32_t RN8209C_GetPa(PRN8209C_CALI_PARAM pCali,float *pP)
+extern FUNC_RET_DEFINE RN8209C_GetPa(PRN8209C_CALI_PARAM pCali,float *pP)
 {
     int32_t s32Temp=0;
     float fTemp=0.0;
     
     if(pCali==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_PowerPA,(uint32_t *)&s32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     fTemp = (float)s32Temp;
     fTemp *= pCali->Kp;
@@ -660,17 +670,17 @@ extern uint32_t RN8209C_GetPa(PRN8209C_CALI_PARAM pCali,float *pP)
     
     return FUNC_RET_SUCC;
 }
-extern uint32_t RN8209C_GetEa(PRN8209C_CALI_PARAM pCali,double *pE)
+extern FUNC_RET_DEFINE RN8209C_GetEa(PRN8209C_CALI_PARAM pCali,double *pE)
 {
     uint32_t 	u32Temp=0;
     float 		fTemp=0.0;
     
     if(pCali==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_EnergyP2,&u32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     fTemp = (double)u32Temp;
     fTemp /= 3600.0;
@@ -681,17 +691,17 @@ extern uint32_t RN8209C_GetEa(PRN8209C_CALI_PARAM pCali,double *pE)
     
     return FUNC_RET_SUCC;
 }
-extern uint32_t RN8209C_GetEa_NoRet(PRN8209C_CALI_PARAM pCali,double *pE)
+extern FUNC_RET_DEFINE RN8209C_GetEa_NoRet(PRN8209C_CALI_PARAM pCali,double *pE)
 {
     uint32_t 	u32Temp=0;
     float 		fTemp=0.0;
     
     if(pCali==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_EnergyP,&u32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     fTemp = (double)u32Temp;
     fTemp /= 3600.0;
@@ -702,17 +712,17 @@ extern uint32_t RN8209C_GetEa_NoRet(PRN8209C_CALI_PARAM pCali,double *pE)
     
     return FUNC_RET_SUCC;
 }
-extern uint32_t RN8209C_GetPb(PRN8209C_CALI_PARAM pCali,float *pP)
+extern FUNC_RET_DEFINE RN8209C_GetPb(PRN8209C_CALI_PARAM pCali,float *pP)
 {
     int32_t s32Temp=0;
     float 	fTemp=0.0;
 	
     if(pCali==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_PowerPB,(uint32_t *)&s32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
 		WatchDogFeed();
     //printf("IARMS:%u\n",u32Temp&0xffffff);
@@ -726,17 +736,17 @@ extern uint32_t RN8209C_GetPb(PRN8209C_CALI_PARAM pCali,float *pP)
     
     return FUNC_RET_SUCC;
 }
-extern uint32_t RN8209C_GetEb(PRN8209C_CALI_PARAM pCali,double *pE)
+extern FUNC_RET_DEFINE RN8209C_GetEb(PRN8209C_CALI_PARAM pCali,double *pE)
 {
     uint32_t 	u32Temp=0;
     float 		fTemp=0.0;
     
     if(pCali==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_EnergyD2,&u32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     fTemp = (double)u32Temp;
     fTemp /= 360000.0;
@@ -747,17 +757,17 @@ extern uint32_t RN8209C_GetEb(PRN8209C_CALI_PARAM pCali,double *pE)
     
     return FUNC_RET_SUCC;
 }
-extern uint32_t RN8209C_GetEb_NoRet(PRN8209C_CALI_PARAM pCali,double *pE)
+extern FUNC_RET_DEFINE RN8209C_GetEb_NoRet(PRN8209C_CALI_PARAM pCali,double *pE)
 {
     uint32_t 	u32Temp=0;
     float 		fTemp=0.0;
     
     if(pCali==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC!=RN8209C_GetRegValue(RN8209C_REG_EnergyD,&u32Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
 		WatchDogFeed();
     fTemp = (double)u32Temp;
@@ -769,7 +779,7 @@ extern uint32_t RN8209C_GetEb_NoRet(PRN8209C_CALI_PARAM pCali,double *pE)
     return FUNC_RET_SUCC;
 }
 
-extern uint32_t RN8209C_DCOffsetCalibration(PRN8209C_DEF pRnDef)
+extern FUNC_RET_DEFINE RN8209C_DCOffsetCalibration(PRN8209C_DEF pRnDef)
 {
     uint32_t 			IARMS1	= 0;
     uint32_t 			IARMS2	= 0;
@@ -781,7 +791,7 @@ extern uint32_t RN8209C_DCOffsetCalibration(PRN8209C_DEF pRnDef)
     PRN8209C_INIT_PARAM pInitParam=NULL;
     
     if(pRnDef==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     WatchDogFeed();
     pInitParam = &pRnDef->InitParam;
@@ -789,7 +799,7 @@ extern uint32_t RN8209C_DCOffsetCalibration(PRN8209C_DEF pRnDef)
 		
 		WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRnDef))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		WatchDogFeed();
 		
     RN8209C_GetCurrVolAverage(&IARMS1,&IBRMS1,&URMS1);
@@ -813,7 +823,7 @@ extern uint32_t RN8209C_DCOffsetCalibration(PRN8209C_DEF pRnDef)
     
 		WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRnDef))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		WatchDogFeed();
 		
     //printf("Delay Start\n");
@@ -863,7 +873,7 @@ extern uint32_t RN8209C_DCOffsetCalibration(PRN8209C_DEF pRnDef)
     if(1==NeedInitFlag)
 		{
         if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRnDef))
-            return FUNC_RET_FAIL;
+            return FUNC_RET_FAILURE;
     }
 		
 		WatchDogFeed();
@@ -895,18 +905,18 @@ extern uint32_t RN8209C_DCOffsetCalibration(PRN8209C_DEF pRnDef)
 		
 		WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRnDef))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
     WatchDogFeed();
 		
     return FUNC_RET_SUCC;
 }
-static uint32_t RN8209C_GetPGAIN(int32_t P,RN8209C_CALI_PARAM *pCali,uint16_t *pPGAIN)
+static FUNC_RET_DEFINE RN8209C_GetPGAIN(int32_t P,RN8209C_CALI_PARAM *pCali,uint16_t *pPGAIN)
 {
 		float ftemp;
 		float ERR=0.0;
 
 		if(pCali==NULL)
-				return FUNC_RET_PARAM_ERR;
+				return FUNC_RET_PARAM_INVALID;
 		
 		ftemp 	= (float)P;
 		ftemp 	/= 1000000.0;
@@ -925,7 +935,7 @@ static uint32_t RN8209C_GetPGAIN(int32_t P,RN8209C_CALI_PARAM *pCali,uint16_t *p
 		return FUNC_RET_SUCC;
 }
 //直流增益校准
-extern uint32_t RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c)
+extern FUNC_RET_DEFINE RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c)
 {
     RN8209C_CALI_PARAM *pCali=NULL;
     RN8209C_INIT_PARAM *pInit=NULL;
@@ -935,7 +945,7 @@ extern uint32_t RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c)
     uint16_t 		u16Temp=0;
 	
     if(pRn8209c==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     pCali = &pRn8209c->CaliParam;
     pInit = &pRn8209c->InitParam;
@@ -946,7 +956,7 @@ extern uint32_t RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c)
     WatchDogFeed();
 		
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
 		WatchDogFeed();
     DelayUs(500000);
@@ -960,7 +970,7 @@ extern uint32_t RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c)
 		
     //printf("RN8209C_GetCurrVolAverage\n");
     if(FUNC_RET_SUCC != RN8209C_GetCurrVolAverage(&Ia,&Ib,NULL))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
 		//printf("IARMS1=%x\n",Ia);
     //printf("IBRMS2=%x\n",Ib);
@@ -986,7 +996,7 @@ extern uint32_t RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c)
 		
     WatchDogFeed();
 		if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
 		WatchDogFeed();
 		DelayUs(500000);
@@ -1001,7 +1011,7 @@ extern uint32_t RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c)
     RN8209C_WaitDataUpdate();
 		WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_GetCurrVolAverage(&Ia,&Ib,&U))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		WatchDogFeed();
 		
     //printf("Ia=%x Ib=%x U=%x\n",Ia,Ib,U);
@@ -1020,24 +1030,24 @@ extern uint32_t RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c)
 		
 		WatchDogFeed();
 		if(FUNC_RET_SUCC != RN8209C_GetPowerAverage(&Pa,&Pb))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
     //printf("Pa=%d Pb=%d\n",Pa,Pb);
 		
 		WatchDogFeed();
 		if(FUNC_RET_SUCC != RN8209C_GetPGAIN(Pa,pCali,&u16Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
     WatchDogFeed();
 		pInit->UNION.PARAM_List.GPQA = u16Temp;
 		//printf("GPQA=%x\n",u16Temp);
 		
     if(FUNC_RET_SUCC != RN8209C_GetPGAIN(Pb,pCali,&u16Temp))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		pInit->UNION.PARAM_List.GPQB = u16Temp;
 		//printf("GPQB=%x\n",u16Temp);
 		
 		WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		WatchDogFeed();
 		
     return FUNC_RET_SUCC;
@@ -1048,7 +1058,7 @@ extern uint32_t RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c)
 //PGAIN=-ERR/( 1+ERR)
 // PGAIN>0,GPQA=PGAIN*2^15;
 // PGAIN<0,GPQA=PGAIN*2^15+2^16;
-extern uint32_t RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c)
+extern FUNC_RET_DEFINE RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c)
 {
     RN8209C_CALI_PARAM *pCali=NULL;
     RN8209C_INIT_PARAM *pInit=NULL;
@@ -1058,7 +1068,7 @@ extern uint32_t RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c)
     volatile uint16_t 	u16Temp=0;
 	
     if(pRn8209c==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     pCali = &pRn8209c->CaliParam;
     pInit = &pRn8209c->InitParam;
@@ -1068,7 +1078,7 @@ extern uint32_t RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c)
     WatchDogFeed();
 		
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
 		WatchDogFeed();
     DelayUs(500000);
@@ -1082,11 +1092,11 @@ extern uint32_t RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c)
 		
     //printf("RN8209C_GetCurrVolAverage\n");
     if(FUNC_RET_SUCC != RN8209C_GetCurrVolAverage(&Ia,NULL,&U))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		WatchDogFeed();
 		
     if(FUNC_RET_SUCC != RN8209C_GetPowerAverage(&Pa,NULL))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		WatchDogFeed();
 		
     //printf("Ia=%x(%d) ",Ia,Ia);
@@ -1127,14 +1137,14 @@ extern uint32_t RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c)
     
 		WatchDogFeed();
 		if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		WatchDogFeed();
 		
     return FUNC_RET_SUCC;
 }
 //A通道相位校正：功率源220V，15A，PF=0.5，计算有功功率误差
 //相位= [ArcSin (-ERR/1.732) ]/0.02 ; 
-extern uint32_t RN8209C_ACPhaseCalibration(PRN8209C_DEF pRn8209c)
+extern FUNC_RET_DEFINE RN8209C_ACPhaseCalibration(PRN8209C_DEF pRn8209c)
 {
     RN8209C_CALI_PARAM *pCali=NULL;
     RN8209C_INIT_PARAM *pInit=NULL;
@@ -1142,7 +1152,7 @@ extern uint32_t RN8209C_ACPhaseCalibration(PRN8209C_DEF pRn8209c)
     float 	ftemp,err;
 	
     if(pRn8209c==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     pCali = &pRn8209c->CaliParam;
     pInit = &pRn8209c->InitParam;
@@ -1152,7 +1162,7 @@ extern uint32_t RN8209C_ACPhaseCalibration(PRN8209C_DEF pRn8209c)
     pInit->UNION.PARAM_List.PhsA = 0;
     WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     WatchDogFeed();
     DelayUs(500000);
@@ -1165,7 +1175,7 @@ extern uint32_t RN8209C_ACPhaseCalibration(PRN8209C_DEF pRn8209c)
     WatchDogFeed();
 		
     if(FUNC_RET_SUCC != RN8209C_GetPowerAverage(&Pa,NULL))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     //printf("Pa=%x(%d) \n",Pa,Pa);
 		WatchDogFeed();
@@ -1186,20 +1196,20 @@ extern uint32_t RN8209C_ACPhaseCalibration(PRN8209C_DEF pRn8209c)
 		
 		WatchDogFeed();
 		if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     return FUNC_RET_SUCC;
 }
 
 //A通道有功OFFSET校正：功率源220V，0A，PF=1
-extern uint32_t RN8209C_ACOffsetCalibration(PRN8209C_DEF pRn8209c)
+extern FUNC_RET_DEFINE RN8209C_ACOffsetCalibration(PRN8209C_DEF pRn8209c)
 {
     RN8209C_INIT_PARAM *pInit=NULL;
 		int32_t Pa=0;
     
 	
     if(pRn8209c==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     pInit = &pRn8209c->InitParam;
 
@@ -1208,7 +1218,7 @@ extern uint32_t RN8209C_ACOffsetCalibration(PRN8209C_DEF pRn8209c)
     pInit->UNION.PARAM_List.APOSA = 0;
     WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     WatchDogFeed();
     DelayUs(500000);
@@ -1221,7 +1231,7 @@ extern uint32_t RN8209C_ACOffsetCalibration(PRN8209C_DEF pRn8209c)
     WatchDogFeed();
 		
     if(FUNC_RET_SUCC != RN8209C_GetPowerAverage(&Pa,NULL))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     //printf("Pa=%x(%d) \n",Pa,Pa);
     if(Pa&0x80000000)
@@ -1230,12 +1240,12 @@ extern uint32_t RN8209C_ACOffsetCalibration(PRN8209C_DEF pRn8209c)
     WatchDogFeed();
 		
 		if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     return FUNC_RET_SUCC;
 }
 //A通道无功校正：功率源220V，15A，PF=0.5
-extern uint32_t RN8209C_ACReactiveCalibration(PRN8209C_DEF pRn8209c)
+extern FUNC_RET_DEFINE RN8209C_ACReactiveCalibration(PRN8209C_DEF pRn8209c)
 {
     RN8209C_CALI_PARAM *pCali=NULL;
     RN8209C_INIT_PARAM *pInit=NULL;
@@ -1244,7 +1254,7 @@ extern uint32_t RN8209C_ACReactiveCalibration(PRN8209C_DEF pRn8209c)
     uint16_t 	u16Temp=0;
 	
     if(pRn8209c==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 		
     pCali = &pRn8209c->CaliParam;
     pInit = &pRn8209c->InitParam;
@@ -1254,7 +1264,7 @@ extern uint32_t RN8209C_ACReactiveCalibration(PRN8209C_DEF pRn8209c)
     pInit->UNION.PARAM_List.QPhsCal = 0;
     WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     WatchDogFeed();
     DelayUs(500000);
@@ -1267,7 +1277,7 @@ extern uint32_t RN8209C_ACReactiveCalibration(PRN8209C_DEF pRn8209c)
     WatchDogFeed();
 		
     if(FUNC_RET_SUCC != RN8209C_GetPowerAverage(&Pa,NULL))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     //printf("Pa=%x(%d) \n",Pa,Pa);
     WatchDogFeed();
@@ -1289,25 +1299,25 @@ extern uint32_t RN8209C_ACReactiveCalibration(PRN8209C_DEF pRn8209c)
 		
     WatchDogFeed();
 		if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     return FUNC_RET_SUCC;
 }
 //电流有效值校正：功率源220V，0A，PF=1.0
-extern uint32_t RN8209C_ACCurrentOffsetCalibration(PRN8209C_DEF pRn8209c)
+extern FUNC_RET_DEFINE RN8209C_ACCurrentOffsetCalibration(PRN8209C_DEF pRn8209c)
 {
     RN8209C_INIT_PARAM *pInit=NULL;
 		uint32_t 	Ia=0;
 	
     if(pRn8209c==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 
     pInit = &pRn8209c->InitParam;
     pInit->UNION.PARAM_List.IARMSOS = 0;
 		
     WatchDogFeed();
     if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     WatchDogFeed();
     DelayUs(500000);
@@ -1320,7 +1330,7 @@ extern uint32_t RN8209C_ACCurrentOffsetCalibration(PRN8209C_DEF pRn8209c)
     WatchDogFeed();
 		
     if(FUNC_RET_SUCC != RN8209C_GetCurrVolAverage(&Ia,NULL,NULL))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     //printf("Ia=%x(%d) \n",Ia,Ia);
     WatchDogFeed();
@@ -1332,17 +1342,17 @@ extern uint32_t RN8209C_ACCurrentOffsetCalibration(PRN8209C_DEF pRn8209c)
 		
     WatchDogFeed();
 		if(FUNC_RET_SUCC != RN8209C_Init_Chip(pRn8209c))
-        return FUNC_RET_FAIL;
+        return FUNC_RET_FAILURE;
 		
     return FUNC_RET_SUCC;
 }
 //定时检查下电能芯片的参数是否被篡改
-extern uint32_t RN8209C_RegularCheckParam(PRN8209C pRn8209)
+extern FUNC_RET_DEFINE RN8209C_RegularCheckParam(PRN8209C pRn8209)
 {
 	uint8_t i;
 
 	if(pRn8209==NULL)
-        return FUNC_RET_PARAM_ERR;
+        return FUNC_RET_PARAM_INVALID;
 	
 	for(i=0;i<3;i++){
         WatchDogFeed();
@@ -1358,5 +1368,62 @@ extern uint32_t RN8209C_RegularCheckParam(PRN8209C pRn8209)
 }
 
 
+extern FUNC_RET_DEFINE RN8209C_Init_Chip_OnlyUseADC(PRN8209C_INIT_PARAM pInitParam)
+{
+	uint8_t			i;
+	uint16_t 		CheckSum=0;
+	
+	if(pInitParam==NULL)
+		return FUNC_RET_PARAM_INVALID;
+	
+	RN8209C_Init_ResetParam(pInitParam);
+	WatchDogFeed();
+	
+    if(FUNC_RET_SUCC != RN8209C_WriteEnable())
+        return FUNC_RET_FAILURE;
+    WatchDogFeed();
+    if(FUNC_RET_SUCC != RN8209C_SoftReset())
+        goto Err;
+
+	WatchDogFeed();
+	if(FUNC_RET_SUCC != RN8209C_WriteEnable())
+    	return FUNC_RET_FAILURE;
+		
+	CheckSum=0;
+	for(i=0;i<24;i++)
+	{
+			CheckSum += (uint16_t)pInitParam->UNION.PARAM_Union[i];
+			if((i==7)||(i==8))
+			{
+					WatchDogFeed();
+					if(FUNC_RET_SUCC!=RN8209C_WiteReg(i,(uint8_t *)&pInitParam->UNION.PARAM_Union[i],1))
+						goto Err;
+			}
+			else
+			{
+					WatchDogFeed();
+					if(FUNC_RET_SUCC!=RN8209C_WiteReg(i,(uint8_t *)&pInitParam->UNION.PARAM_Union[i],2))
+						goto Err;
+			}
+	}
+	WatchDogFeed();
+	CheckSum += 0x1600;
+	CheckSum = ~CheckSum;
+		
+    pInitParam->UNION.PARAM_List.CHKSUM = CheckSum;
+    if(pInitParam->UNION.PARAM_List.CHKSUM != RN8209C_GetCheckSum())
+        goto Err;
+    WatchDogFeed();
+		
+    RN8209C_WriteProtect(); 
+		WatchDogFeed();
+		
+    return FUNC_RET_SUCC;
+	
+Err:RN8209C_WriteProtect(); 
+		WatchDogFeed();
+		
+    return FUNC_RET_FAILURE;
+}
 
 

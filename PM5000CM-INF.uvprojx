@@ -426,6 +426,23 @@
         </Group>
         <Group>
           <GroupName>Device</GroupName>
+          <Files>
+            <File>
+              <FileName>AT24CXX.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Device\AT24CXX.c</FilePath>
+            </File>
+            <File>
+              <FileName>I2C.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Device\I2C.c</FilePath>
+            </File>
+            <File>
+              <FileName>Led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Device\Led.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>Library</GroupName>
@@ -576,24 +593,9 @@
           </GroupOption>
           <Files>
             <File>
-              <FileName>AT45DBXXX.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\User\AT45DBXXX.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>N74HC595.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\User\N74HC595.c</FilePath>
-            </File>
-            <File>
-              <FileName>NRX8010.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\User\NRX8010.c</FilePath>
             </File>
             <File>
               <FileName>RN8209C.c</FileName>

@@ -1,17 +1,15 @@
 #ifndef __RN8209C_H_
 #define __RN8209C_H_
 
-//#include "UserCommon.h"
 #include "NUC029xAN.h"
+#include "UserCommon.h"
 
 //函数返回值定义
-#define FUNC_RET_SUCC       						0
-#define FUNC_RET_PARAM_ERR  						1
-#define FUNC_RET_FAIL       						2
 
 #define RN8209C_BAUD    								4800
 #define RN8209C_PARITY    							'e'
 
+#define DelayUs Comm_DelayUs
 
 typedef struct __attribute__((packed))
 {	
@@ -75,9 +73,9 @@ typedef struct __attribute__((packed))
 /*************************************** 
 	RN8209C 特殊命令
 ***************************************/
-extern uint32_t RN8209C_SoftReset(void);
-extern uint32_t RN8209C_WriteEnable(void);
-extern uint32_t RN8209C_WriteProtect(void); 
+extern FUNC_RET_DEFINE RN8209C_SoftReset(void);
+extern FUNC_RET_DEFINE RN8209C_WriteEnable(void);
+extern FUNC_RET_DEFINE RN8209C_WriteProtect(void); 
 /*************************************** 
 	RN8209C 内部寄存器定义
 ***************************************/
@@ -219,41 +217,45 @@ extern uint32_t RN8209C_WriteProtect(void);
 #define REG_SYSCON_ADC2ON_OFF										(0<<REG_SYSCON_ADC2ON_POS)
 
 //
-
+extern FUNC_RET_DEFINE RN8209C_GetRegValue(uint8_t RegAddr,uint32_t *pVal);
 extern uint16_t RN8209C_GetCheckSum(void);    
 extern void RN8209C_WaitDataUpdate(void);
 extern uint8_t RN8209C_TestDataUpdate(void);
-extern uint32_t RN8209C_Init(PRN8209C pRn8209);
-extern uint32_t RN8209C_Init_ResetParam(PRN8209C_INIT_PARAM pInitParam);
+extern FUNC_RET_DEFINE RN8209C_Init(PRN8209C pRn8209);
+extern FUNC_RET_DEFINE RN8209C_Init_ResetParam(PRN8209C_INIT_PARAM pInitParam);
 
-extern uint32_t RN8209C_DCOffsetCalibration(PRN8209C_DEF pRnDef);
-extern uint32_t RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c);
+extern FUNC_RET_DEFINE RN8209C_DCOffsetCalibration(PRN8209C_DEF pRnDef);
+extern FUNC_RET_DEFINE RN8209C_DCGainCalibration(PRN8209C_DEF pRn8209c);
 
-extern uint32_t RN8209C_GetCurrVolAverage(uint32_t *pIa,uint32_t *pIb,uint32_t *pU);
-extern uint32_t GetSPLIB(uint32_t *pIb);
-extern uint32_t GetSPLIBAverage(uint32_t *pIb);
-extern uint32_t RN8209C_GetFreqHz(float *pHz);
-extern uint32_t RN8209C_GetIa(PRN8209C_CALI_PARAM pCali,float *pI);
-extern uint32_t RN8209C_GetIb(PRN8209C_CALI_PARAM pCali,float *pI);
-extern uint32_t RN8209C_GetU(PRN8209C_CALI_PARAM pCali,float *pU);
-extern uint32_t RN8209C_GetPa(PRN8209C_CALI_PARAM pCali,float *pP);
-extern uint32_t RN8209C_GetPb(PRN8209C_CALI_PARAM pCali,float *pP);
-extern uint32_t RN8209C_GetEa(PRN8209C_CALI_PARAM pCali,double *pE);
-extern uint32_t RN8209C_GetEa_NoRet(PRN8209C_CALI_PARAM pCali,double *pE);
-extern uint32_t RN8209C_GetEb(PRN8209C_CALI_PARAM pCali,double *pE);
-extern uint32_t RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c);
-extern uint32_t RN8209C_GetEb_NoRet(PRN8209C_CALI_PARAM pCali,double *pE);
+extern FUNC_RET_DEFINE RN8209C_GetCurrVolAverage(uint32_t *pIa,uint32_t *pIb,uint32_t *pU);
+extern FUNC_RET_DEFINE GetSPLIA(uint32_t *pIa);
+extern FUNC_RET_DEFINE GetSPLIB(uint32_t *pIb);
+extern FUNC_RET_DEFINE GetSPLU(uint32_t *pU);
+extern FUNC_RET_DEFINE GetSPLIBAverage(uint32_t *pIb);
+extern FUNC_RET_DEFINE RN8209C_GetFreqHz(float *pHz);
+extern FUNC_RET_DEFINE RN8209C_GetIa(PRN8209C_CALI_PARAM pCali,float *pI);
+extern FUNC_RET_DEFINE RN8209C_GetIb(PRN8209C_CALI_PARAM pCali,float *pI);
+extern FUNC_RET_DEFINE RN8209C_GetU(PRN8209C_CALI_PARAM pCali,float *pU);
+extern FUNC_RET_DEFINE RN8209C_GetPa(PRN8209C_CALI_PARAM pCali,float *pP);
+extern FUNC_RET_DEFINE RN8209C_GetPb(PRN8209C_CALI_PARAM pCali,float *pP);
+extern FUNC_RET_DEFINE RN8209C_GetEa(PRN8209C_CALI_PARAM pCali,double *pE);
+extern FUNC_RET_DEFINE RN8209C_GetEa_NoRet(PRN8209C_CALI_PARAM pCali,double *pE);
+extern FUNC_RET_DEFINE RN8209C_GetEb(PRN8209C_CALI_PARAM pCali,double *pE);
+extern FUNC_RET_DEFINE RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c);
+extern FUNC_RET_DEFINE RN8209C_GetEb_NoRet(PRN8209C_CALI_PARAM pCali,double *pE);
 
 
 //PGAIN=-ERR/( 1+ERR)
 //PGAIN>0,GPQA=PGAIN*2^15;
 //PGAIN<0,GPQA=PGAIN*2^15+2^16;
-extern uint32_t RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c);
-extern uint32_t RN8209C_ACPhaseCalibration(PRN8209C_DEF pRn8209c);
-extern uint32_t RN8209C_ACOffsetCalibration(PRN8209C_DEF pRn8209c);
-extern uint32_t RN8209C_ACReactiveCalibration(PRN8209C_DEF pRn8209c);
-extern uint32_t RN8209C_ACCurrentOffsetCalibration(PRN8209C_DEF pRn8209c);
+extern FUNC_RET_DEFINE RN8209C_ACGainCalibration(PRN8209C_DEF pRn8209c);
+extern FUNC_RET_DEFINE RN8209C_ACPhaseCalibration(PRN8209C_DEF pRn8209c);
+extern FUNC_RET_DEFINE RN8209C_ACOffsetCalibration(PRN8209C_DEF pRn8209c);
+extern FUNC_RET_DEFINE RN8209C_ACReactiveCalibration(PRN8209C_DEF pRn8209c);
+extern FUNC_RET_DEFINE RN8209C_ACCurrentOffsetCalibration(PRN8209C_DEF pRn8209c);
 //定时检查下电能芯片的参数是否被篡改
-extern uint32_t RN8209C_RegularCheckParam(PRN8209C pRn8209);
+extern FUNC_RET_DEFINE RN8209C_RegularCheckParam(PRN8209C pRn8209);
+
+extern FUNC_RET_DEFINE RN8209C_Init_Chip_OnlyUseADC(PRN8209C_INIT_PARAM pInitParam);
 
 #endif
